@@ -128,7 +128,7 @@ void loop()
           cliente.println("HTTP/1.1 200 OK");
           cliente.println("Content-Type: text/html");
           cliente.println("");
-          
+
           cliente.println("<!DOCTYPE html>");
           cliente.println("<html lang='es'>");
           cliente.println("<head>");
@@ -257,83 +257,82 @@ void loop()
           cliente.stop();
 
           // Limpia el String(Cadena de Caracteres para una nueva lectura
-            readString="";  
-            if (readString.indexOf("?reset") >0){
-               digitalWrite(RESET, HIGH);
-           }
-         }
-
-          //Reseteo del combustible
-          //reset(peticion, cliente);
-          
-
-          //Peticion para poder enviar el valor de la corriente
-          //recibirCorriente(peticion, cliente, Irms);
-
-          // Si recibimos la señal de ande, le enviamos un verdadero a la aplicacion
-          //statusAnde(peticion, cliente, estado_ande);
-
-          //Enviamos la señal del generador a la aplicacion
-          //statusGenerador(peticion, cliente, estado_generador);
-
-          //Si no tenemos ande podemos dar arranque al generador
-          //        if (!estado_ande) {
-          //          //Si no arranca el generador el va seguir intentado
-          //          if (!estado_generador) {
-          //            //Peticion para poder encender el generador
-          //            start_G(peticion);
-          //          }
-          //        }
-          
-
+          readString = "";
+          if (readString.indexOf("?reset") > 0) {
+            digitalWrite(RESET, HIGH);
+          }
         }
+
+        //Reseteo del combustible
+        //reset(peticion, cliente);
+
+
+        //Peticion para poder enviar el valor de la corriente
+        //recibirCorriente(peticion, cliente, Irms);
+
+        // Si recibimos la señal de ande, le enviamos un verdadero a la aplicacion
+        //statusAnde(peticion, cliente, estado_ande);
+
+        //Enviamos la señal del generador a la aplicacion
+        //statusGenerador(peticion, cliente, estado_generador);
+
+        //Si no tenemos ande podemos dar arranque al generador
+        //        if (!estado_ande) {
+        //          //Si no arranca el generador el va seguir intentado
+        //          if (!estado_generador) {
+        //            //Peticion para poder encender el generador
+        //            start_G(peticion);
+        //          }
+        //        }
+
+
       }
     }
   }
+}
 
 
 
-  void start(int duracion) {
-    digitalWrite(START, HIGH);
-    delay(duracion);
-    digitalWrite(START, LOW);
+void start(int duracion) {
+  digitalWrite(START, HIGH);
+  delay(duracion);
+  digitalWrite(START, LOW);
+}
+
+void start_G( String peticion) {
+  //Peticion para poder encender el generador
+  if (peticion.indexOf("start") >= 0) {
+    int duracion = peticion.substring(peticion.indexOf("?") + 6, peticion.indexOf("?") + 10).toInt();
+    start(duracion);
   }
+}
 
-  void start_G( String peticion) {
-    //Peticion para poder encender el generador
-    if (peticion.indexOf("start") >= 0) {
-      int duracion = peticion.substring(peticion.indexOf("?") + 6, peticion.indexOf("?") + 10).toInt();
-      start(duracion);
-    }
+
+void statusAnde( String peticion, EthernetClient client,  boolean data) {
+  if (peticion.indexOf("estadoande") >= 0) {
+    client.print(data);
   }
+}
 
-
-  void statusAnde( String peticion, EthernetClient client,  boolean data) {
-    if (peticion.indexOf("estadoande") >= 0) {
-      client.print(data);
-    }
+void statusGenerador( String peticion, EthernetClient client,  boolean data ) {
+  if (peticion.indexOf("estadogenerador") >= 0) {
+    client.print(data);
   }
+}
 
-  void statusGenerador( String peticion, EthernetClient client,  boolean data ) {
-    if (peticion.indexOf("estadogenerador") >= 0) {
-      client.print(data);
-    }
+void recibirCorriente(String peticion, EthernetClient client, double corriente) {
+  if (peticion.indexOf("enviaDato") >= 0) {
+    client.print(corriente);
   }
+}
 
-  void recibirCorriente(String peticion, EthernetClient client, double corriente) {
-    if (peticion.indexOf("enviaDato") >= 0) {
-      client.print(corriente);
-    }
-  }
-
-  void stopG( String peticion ) {
+void stopG( String peticion ) {
 
 
-  }
+}
 
-  void reset() {
-      digitalWrite(RESET, HIGH);
-      delay(500);
-      digitalWrite(RESET, LOW);
-    
-  }
+void reset() {
+  digitalWrite(RESET, HIGH);
+  delay(500);
+  digitalWrite(RESET, LOW);
+}

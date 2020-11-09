@@ -42,14 +42,22 @@ void loop()
   double Irms = energyMonitor.calcIrms(1500);
   boolean estado_ande = digitalRead(4);
   boolean estado_generador = digitalRead(3);
-  String c_Ande = "";
+  String c_Ande = "#222;";
+  String c_Generador = "#222;";
+
+
   if (estado_ande) {
     cont_generador = 0;
+    c_Ande = "#00ff00;";
+
     digitalWrite(7, LOW);
+
     if (cont_ande == 0) {
 
       //Desactivamos el contactor de generador
       digitalWrite(7, LOW);
+      c_Generador = "#222;";
+
       delay(3000);
 
       //Activamos el contactor de la Ande
@@ -61,7 +69,13 @@ void loop()
     }
 
   } else {
+
+    if(estado_generador) {
+      c_Generador = "#00ff00;";
+    }
     cont_ande = 0;
+
+
     if (cont_generador == 0) {
       //Desactivamos el contactor de la Ande
       digitalWrite(6, LOW);
@@ -76,8 +90,10 @@ void loop()
       cont_generador = cont_generador + 1;
     }
 
+
+
   }
-  EthernetClient cliente = server.available(); 
+  EthernetClient cliente = server.available();
   if (cliente) {
     boolean currentLineIsBlank = true;
     String cadena = "";
@@ -89,10 +105,14 @@ void loop()
 
           int posicion = cadena.indexOf("Data=");
 
-          if (cadena.substring(posicion) == "Data=1") {
-            start();
+          //Si no tenemos ande ni generador podemos hacer arrancar el generador
+          if (!estado_generador && !estado_ande) {
+            if (cadena.substring(posicion) == "Data=1") {
+              start();
+            }
           }
-          else if (cadena.substring(posicion) == "Data=2") {
+
+          if (cadena.substring(posicion) == "Data=2") {
             reset();
           }
         }
@@ -100,58 +120,67 @@ void loop()
           // Enviamos al cliente una respuesta HTTP
           cliente.println("HTTP/1.1 200 OK");
           cliente.println("Content-Type: text/html");
+          cliente.println("Connection: close");
           cliente.println();
 
+
           //Página web en formato HTML
-          cliente.println("<!DOCTYPE html>");
-          cliente.println("<html lang='es'>");
-          cliente.println("<head>");
-          cliente.println("<meta charset='UTF-8'>");
-          cliente.println("<meta name=viewport content=width=device-width, initial-scale=1.0>");
-          cliente.println("<title>Web Ardu</title>");
+          cliente.println(F("<!DOCTYPE html>"));
+          cliente.println(F("<html lang='es'>"));
+          cliente.println(F("<head>"));
+          cliente.println(F("<meta charset='UTF-8'>"));
+          cliente.println(F("<meta name=viewport content=width=device-width, initial-scale=1.0>"));
+          cliente.println(F("<title>Web Ardu</title>"));
 
           //Codigo CSS
-          cliente.println("<style type=\'text/css\'>");
-        
-            estilos(cliente);
+          cliente.println(F("<style type=\'text/css\'>"));
 
-          cliente.println("</style>");
+          estilos(cliente, c_Ande, c_Generador);
+
+          cliente.println(F("</style>"));
 
 
-          cliente.println("</head>");
+          cliente.println(F("</head>"));
 
-          cliente.println("<body>");
+          cliente.println(F("<body>"));
 
-          cliente.println("<div class='container'>");
-          cliente.println("<h2>TTA REMOTE</h2>");
+          cliente.println(F("<div class='container'>"));
+          cliente.println(F("<h2>TTA REMOTE</h2>"));
 
-          cliente.println("<div class='senhal'>");
-          cliente.println("<div id='ande'></div>");
-          cliente.println("<div id='generador'></div>");
-          cliente.println("</div>");
+          cliente.println(F("<div class='senhal'>"));
+          cliente.println(F("<div id='ande'></div>"));
+          cliente.println(F("<div id='generador'></div>"));
+          cliente.println(F("</div>"));
 
-          cliente.println("<div class='labels'>");
-          cliente.println("<label id='l-ande'>Ande</label>");
-          cliente.println("<label id='l-generador'>Generador</label>");
-          cliente.println("</div>");
+          cliente.println(F("<div class='labels'>"));
+          cliente.println(F("<label id='l-ande'>Ande</label>"));
+          cliente.println(F("<label id='l-generador'>Generador</label>"));
+          cliente.println(F("</div>"));
 
-          cliente.println("<div class='display'>");
-          cliente.println("<b>");
+          cliente.println(F("<div class='display'>"));
+          cliente.println(F("<b>"));
           cliente.println(Irms);
-          cliente.println("</b>");
-          cliente.println("</div>");
+          cliente.println(F("</b>"));
+          cliente.println(F("</div>"));
 
-          cliente.println("<div class='buttons'>");
+          cliente.println(F("<a href='./' class='refresh'>Actualizar</a>"));
+          
+          cliente.println(F("<div class='buttons'>"));
 
-          cliente.print("<button onClick=location.href='./?Data=1'>Start</button>");
-          cliente.print("<button onClick=location.href='./?Data=2'>Reset</button>");
+          if (estado_generador || estado_ande) {
+            cliente.print(F("<button disabled onClick=location.href='./?Data=1'>Start</button>"));
+          } else {
+            cliente.print(F("<button onClick=location.href='./?Data=1'>Start</button>"));
+          }
 
-          cliente.println("</div>");
+          cliente.print(F("<button onClick=location.href='./?Data=2'>Reset</button>"));
 
-          cliente.println("</div>");
+          cliente.println(F("</div>"));
 
-          cliente.println("</body>");
-          cliente.println("</html>");
+          cliente.println(F("</div>"));
+
+          cliente.println(F("</body>"));
+          cliente.println(F("</html>"));
           break;
         }
         if (c == 'n') {
@@ -168,79 +197,100 @@ void loop()
   }
 }
 
-void estilos(EthernetClient cliente) {
-  cliente.println("body{");
-  cliente.println("background: gray;");
-  cliente.println("}");
+void estilos(EthernetClient cliente, String c_Ande, String c_Generador) {
+  cliente.println(F("body{"));
+  cliente.println(F("background: #222;"));
+  cliente.println(F("color: #fff;"));
+  cliente.println(F("}"));
 
-  cliente.println(".container{");
-  cliente.println("width: 100%;");
-  cliente.println("text-align: center;");
-  cliente.println("margin: auto;");
-  cliente.println("}");
+  cliente.println(F(".container{"));
+  cliente.println(F("width: 100%;"));
+  cliente.println(F("text-align: center;"));
+  cliente.println(F("margin: auto;"));
+  cliente.println(F("}"));
 
-  cliente.println(".container .senhal {");
-  cliente.println("width: 100%;");
-  cliente.println("height: 25vh;");
-  cliente.println("display: inline-flex;");
-  cliente.println("}");
+  cliente.println(F(".container .senhal {"));
+  cliente.println(F("width: 100%;"));
+  cliente.println(F("height: 25vh;"));
+  cliente.println(F("display: inline-flex;"));
+  cliente.println(F("}"));
 
-  cliente.println("#ande, #generador {");
-  cliente.println("width: 80px;");
-  cliente.println("height: 80px;");
-  cliente.println("border-radius: 50%;");
-  cliente.println("background-color: green;");
-  cliente.println("}");
+  cliente.println(F("#ande, #generador {"));
+  cliente.println(F("width: 80px;"));
+  cliente.println(F("height: 80px;"));
+  cliente.println(F("border: solid 2px #fff;"));
+  cliente.println(F("border-radius: 50%;"));
+  //cliente.println("background-color: green;"));
+  cliente.println(F("}"));
 
-  cliente.println("#ande{");
-  cliente.println("margin-left: 15%;");
-  cliente.println("}");
+  cliente.println(F("#ande{"));
+  cliente.print(F("background-color:")); cliente.println(c_Ande);
+  cliente.println(F("margin-left: 15%;"));
+  cliente.println(F("}"));
 
-  cliente.println("#generador{");
-  cliente.println("margin: 0 20%;");
-  cliente.println("}");
+  cliente.println(F("#generador{"));
+  cliente.print(F("background-color:")); cliente.println(c_Generador);
+  cliente.println(F("margin: 0 20%;"));
+  cliente.println(F("}"));
 
-  cliente.println(".display{");
-  cliente.println("margin: auto;");
-  cliente.println("width: 200px;");
-  cliente.println("height: 80px;");
-  cliente.println("border: solid 2px #000;");
-  cliente.println("text-align: center;");
-  cliente.println("}");
+  cliente.println(F(".display{"));
+  cliente.println(F("margin: 5px auto;"));
+  cliente.println(F("width: 200px;"));
+  cliente.println(F("height: 80px;"));
+  cliente.println(F("border: solid 2px #000;"));
+  cliente.println(F("text-align: center;"));
+  cliente.println(F("}"));
 
-  cliente.println(".display b{");
-  cliente.println("display: block;");
-  cliente.println("margin-top: 12%;");
-  cliente.println("font-size: 26px;");
-  cliente.println("}");
+  cliente.println(F(".display b{"));
+  cliente.println(F("display: block;"));
+  cliente.println(F("margin-top: 12%;"));
+  cliente.println(F("font-size: 26px;"));
+  cliente.println(F("}"));
 
-  cliente.println(".labels{");
-  cliente.println("position: absolute;");
-  cliente.println("top: 25%;");
-  cliente.println("left: 15%;");
-  cliente.println("width: 300px;");
-  cliente.println("font-weight: bold;");
-  cliente.println("}");
+  cliente.println(F(".labels{"));
+  cliente.println(F("position: absolute;"));
+  cliente.println(F("top: 30%;"));
+  cliente.println(F("left: 15%;"));
+  cliente.println(F("width: 300px;"));
+  cliente.println(F("font-weight: bold;"));
+  cliente.println(F("}"));
 
-  cliente.println("#l-ande{");
-  cliente.println("margin-left: -20%;");
-  cliente.println("}");
+  cliente.println(F("#l-ande{"));
+  cliente.println(F("margin-left: -20%;"));
+  cliente.println(F("}"));
 
-  cliente.println("#l-generador{");
-  cliente.println("margin-left: 30%;");
-  cliente.println("}");
+  cliente.println(F("#l-generador{"));
+  cliente.println(F("margin-left: 30%;"));
+  cliente.println(F("}"));
 
-  cliente.println(".buttons{");
-  cliente.println("width: 80%;");
-  cliente.println("height: 20vh;");
-  cliente.println("margin: 20% auto;");
-  cliente.println("}");
+  cliente.println(F(".buttons{"));
+  cliente.println(F("width: 80%;"));
+  cliente.println(F("height: 20vh;"));
+  cliente.println(F("margin: 20% auto;"));
+  cliente.println(F("}"));
 
 
 
-  cliente.println("button{");
-  cliente.println("padding: 20px 25px;");
-  cliente.println("}");
+  cliente.println(F("button{"));
+  cliente.println(F("width: 100px;"));
+  cliente.println(F("height: 50px;"));
+  cliente.println(F("background-color: #0066ff;"));
+  cliente.println(F("border: solid 2px #000;"));
+  cliente.println(F("border-radius: 20px;"));
+  cliente.println(F("margin: 6%;"));
+  cliente.println(F("}"));
+
+  cliente.println(F(".refresh {"));
+  cliente.println(F("font-size: 14px;"));
+  cliente.println(F("border-radius: 5px;"));
+  cliente.println(F("margin: 5%;"));
+  cliente.println(F("width: 400px;"));
+  cliente.println(F("height: 10px;"));
+  cliente.println(F("padding: 5px;"));
+  cliente.println(F("border: solid 2px #000;"));
+  cliente.println(F("text-decoration: none;"));
+  cliente.println(F("color: #fff;"));
+  cliente.println(F("}"));
 }
 
 void reset() {

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Ardu</title>
+
+    <style>
+        * { background: gray; }
+
+        .container {
+            width: 100%;
+        }
+
+        .container {
+            text-align: center;
+            margin: auto;
+        }
+
+        .container .senhal {
+            width: 100%;
+            height: 25vh;
+            display: inline-flex;
+        }
+
+        #ande, #generador {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #5cb85c;
+        }
+
+        #ande {
+            margin-left: 15%;
+        }
+        #generador {
+            margin: 0 20%;
+        }
+
+        .display {
+            margin: auto;
+            width: 200px;
+            height: 80px;
+            border: solid 2px #000;
+            text-align: center;
+        }
+
+        .display b {
+            display: block;
+            margin-top: 12%;
+            font-size: 26px;
+        }
+
+        .labels {
+            position: absolute;
+            top: 25%;
+            left: 15%;
+            width: 300px;
+            font-weight: bold;
+        }
+
+        #l-ande {
+            margin-left: -20%;
+        }
+
+        #l-generador{
+            margin-left: 30%;
+        }
+
+        .buttons {
+            width: 80%;
+            height: 20vh;
+            margin: 20% auto;
+        }
+
+        .buttons a {
+            font-size: 22px;
+            width: 300px;
+            height: 50px;
+            background-color: #0066ff;
+            border: solid 2px #000;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #fff;
+            margin: 6%;
+        }
+
+        a {
+          padding: 20px 25px;
+        }
+
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>TTA REMOTE</h2>
+
+        <div class="senhal">
+            <div id="ande"></div>
+            <div id="generador"></div>
+        </div>
+
+        <div class="labels">
+            <label id="l-ande">Ande</label>
+            <label id="l-generador">Generador</label>
+        </div>
+
+        <div class="display">
+            <b>4.5A</b>
+        </div>
+
+        <div class="buttons">
+            <!-- <button>Start</button> -->
+            <a href="#">Start</a>
+            <a href="#">Reset</a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

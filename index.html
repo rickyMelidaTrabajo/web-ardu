@@ -106,6 +106,23 @@
             text-decoration: none;
             color: #222;
         }
+
+        .styled-select {
+            width: 240px;
+            height: 34px;
+            overflow: hidden;
+            background-color: #0066ff;
+            border: 1px solid #ccc;
+        }
+
+        .sidebar-box select {
+            display: block;
+            padding: 5px 10px;
+            height: 42px;
+            margin: -30% auto;
+            height: 34px;
+            background-color: #aab4ab;
+        }
     </style>
 </head>
 
@@ -133,8 +150,23 @@
             <a href="#">Start</a>
             <a href="#">Reset</a>
         </div>
-
+        <div class="sidebar-box">
+            <select class="styled-select" id="opcion">
+                <option>Selecciona una opción</option>
+                <option>Stop</option>
+            </select>
+        </div>
     </div>
+
+    <script>
+        var select  = document.getElementById('opcion');
+
+        select.addEventListener('change',function(){
+            if(select.value == 'Stop') {
+                console.log('Se presiono: ' + select.value);
+            }
+        })
+    </script>
 
 </body>
 

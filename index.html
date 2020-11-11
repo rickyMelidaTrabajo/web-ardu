@@ -75,7 +75,7 @@
 
         .buttons {
             width: 80%;
-            height: 20vh;
+            height: 10vh;
             margin: 20% auto;
         }
 
@@ -107,13 +107,6 @@
             color: #222;
         }
 
-        .styled-select {
-            width: 240px;
-            height: 34px;
-            overflow: hidden;
-            background-color: #0066ff;
-            border: 1px solid #ccc;
-        }
 
         .sidebar-box select {
             display: block;
@@ -123,6 +116,21 @@
             height: 34px;
             background-color: #aab4ab;
         }
+        form {
+            margin-top: 10%;
+        }
+        input[type='text'] {
+            width: 40%;
+            padding: 5px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-weight: bold;
+        }
+
+        
     </style>
 </head>
 
@@ -145,11 +153,16 @@
         </div>
         <a href="./" class="refresh">Actualizar</a>
 
+        <form action="./" method="GET">
+            <label for="">Tiempo de arranque</label> <br>
+            <input type="text" name="duracion" id="">
+        </form>
         <div class="buttons">
             <!-- <button>Start</button> -->
             <a href="#">Start</a>
             <a href="#">Reset</a>
         </div>
+
         <div class="sidebar-box">
             <select class="styled-select" id="opcion">
                 <option>Selecciona una opción</option>
@@ -159,10 +172,10 @@
     </div>
 
     <script>
-        var select  = document.getElementById('opcion');
+        var select = document.getElementById('opcion');
 
-        select.addEventListener('change',function(){
-            if(select.value == 'Stop') {
+        select.addEventListener('change', function () {
+            if (select.value == 'Stop') {
                 console.log('Se presiono: ' + select.value);
             }
         })

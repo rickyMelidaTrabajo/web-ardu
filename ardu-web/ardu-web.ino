@@ -2,12 +2,20 @@
 #include <SPI.h>
 #include <Ethernet.h>
 
+#define RESET 9
+#define STOP 8
+#define C_GENERADOR 7 //SALIDA AL CONTACTOR DEL GENERADOR
+#define C_ANDE 6 //SALIDA AL CONTACTOR DE ANDE
+#define START 5
+
+#define S_ANDE 4 //SEÑAL DE ANDE
+#define S_GENERADOR 3//SEÑAL DE GENERADOR
 
 // Crear una instancia EnergyMonitor
 EnergyMonitor energyMonitor;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };   //Direccion Fisica MAC
-IPAddress ip(192, 168, 0, 177);                      // IP Local que usted debe configurar
+IPAddress ip(192, 168, 1, 10);                      // IP Local que usted debe configurar
 
 EthernetServer server(80);                             //Se usa el puerto 80 del servidor
 
@@ -15,20 +23,20 @@ int cont_ande = 0;
 int cont_generador = 0;
 
 void setup() {
-  pinMode(9, OUTPUT);
-  pinMode(8, OUTPUT);
-  pinMode(7, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(5, OUTPUT);
+  pinMode(RESET, OUTPUT);
+  pinMode(STOP, OUTPUT);
+  pinMode(C_GENERADOR, OUTPUT);
+  pinMode(C_ANDE, OUTPUT);
+  pinMode(START, OUTPUT);
 
-  pinMode(4, INPUT);
-  pinMode(3, INPUT);
+  pinMode(S_ANDE, INPUT);
+  pinMode(S_GENERADOR, INPUT);
 
 
   // Iniciamos la clase indicando
   // Número de pin: donde tenemos conectado el SCT-013
-  // Valor de calibración: valor obtenido de la calibración teórica
-  energyMonitor.current(0, 2.63);
+  // Valor de calibración: valor obtenido de la calibración teórica 2.63
+  energyMonitor.current(0, 3.5);
 
   Ethernet.begin(mac, ip); // Inicializa la conexion Ethernet y el servidor
   server.begin();
@@ -40,8 +48,8 @@ void setup() {
 void loop()
 {
   double Irms = energyMonitor.calcIrms(1500);
-  boolean estado_ande = digitalRead(4);
-  boolean estado_generador = digitalRead(3);
+  boolean estado_ande = digitalRead(S_ANDE);
+  boolean estado_generador = digitalRead(S_GENERADOR);
   String c_Ande = "#222;";
   String c_Generador = "#222;";
 
@@ -50,27 +58,27 @@ void loop()
     cont_generador = 0;
     c_Ande = "#00ff00;";
 
-    digitalWrite(7, LOW);
+    digitalWrite(C_GENERADOR, LOW);
 
     if (cont_ande == 0) {
 
       //Desactivamos el contactor de generador
-      digitalWrite(7, LOW);
+      digitalWrite(C_GENERADOR, LOW);
       c_Generador = "#222;";
 
       delay(3000);
 
       //Activamos el contactor de la Ande
-      digitalWrite(6, HIGH);
+      digitalWrite(C_ANDE, HIGH);
 
       //Activamos el stop del generador
-      digitalWrite(8, HIGH);
+      digitalWrite(STOP, HIGH);
       cont_ande = cont_ande + 1;
     }
 
   } else {
 
-    if(estado_generador) {
+    if (estado_generador) {
       c_Generador = "#00ff00;";
     }
     cont_ande = 0;
@@ -83,10 +91,10 @@ void loop()
       delay(3000);
 
       //Activamos el contactor de generador
-      digitalWrite(7, HIGH);
+      digitalWrite(C_GENERADOR, HIGH);
 
       //Desactivamos el stop del generador
-      digitalWrite(8, LOW);
+      digitalWrite(STOP, LOW);
       cont_generador = cont_generador + 1;
     }
 
@@ -107,9 +115,21 @@ void loop()
 
           //Si no tenemos ande ni generador podemos hacer arrancar el generador
           if (!estado_generador && !estado_ande) {
-            if (cadena.substring(posicion) == "Data=1") {
-              start();
+            if (cadena.substring(posicion) == "Data=1000") {
+              int duracion = cadena.substring(cadena.indexOf("=") + 6, cadena.indexOf("?") + 10).toInt();
+              Serial.println(duracion);
+              start(1000);
+            } else {
+              if (cadena.substring(posicion) == "Data=3") {
+                digitalWrite(STOP, HIGH);
+              } else {
+                if (cadena.substring(posicion) == "Data=4") {
+                  digitalWrite(STOP, LOW);
+                }
+              }
             }
+
+
           }
 
           if (cadena.substring(posicion) == "Data=2") {
@@ -130,7 +150,7 @@ void loop()
           cliente.println(F("<head>"));
           cliente.println(F("<meta charset='UTF-8'>"));
           cliente.println(F("<meta name=viewport content=width=device-width, initial-scale=1.0>"));
-          cliente.println(F("<title>Web Ardu</title>"));
+          cliente.println(F("<title>TTA Remoto</title>"));
 
           //Codigo CSS
           cliente.println(F("<style type=\'text/css\'>"));
@@ -146,7 +166,7 @@ void loop()
 
           cliente.println(F("<div class='container'>"));
           cliente.println(F("<h2>TTA REMOTE</h2>"));
-
+          cliente.println(F("<img src'./imagen.jpeg' alt='logo'>"));
           cliente.println(F("<div class='senhal'>"));
           cliente.println(F("<div id='ande'></div>"));
           cliente.println(F("<div id='generador'></div>"));
@@ -164,20 +184,42 @@ void loop()
           cliente.println(F("</div>"));
 
           cliente.println(F("<a href='./' class='refresh'>Actualizar</a>"));
-          
+
           cliente.println(F("<div class='buttons'>"));
 
           if (estado_generador || estado_ande) {
             cliente.print(F("<button disabled onClick=location.href='./?Data=1'>Start</button>"));
           } else {
-            cliente.print(F("<button onClick=location.href='./?Data=1'>Start</button>"));
+            cliente.print(F("<button onClick=location.href='./?Data=1000'>Start</button>"));
           }
 
           cliente.print(F("<button onClick=location.href='./?Data=2'>Reset</button>"));
 
           cliente.println(F("</div>"));
 
+          cliente.println(F("<div class='sidebar - box'>"));
           cliente.println(F("</div>"));
+          cliente.println(F("<select class='styled-select' id='opcion'>"));
+          cliente.println(F("<option>Selecciona una opción</option>"));
+          cliente.println(F("<option>Normal</option>"));
+          cliente.println(F("<option>Stop</option>"));
+          cliente.println(F("</select>"));
+          cliente.println(F("</div>"));
+
+          cliente.println(F("<script>"));
+          cliente.println(F("var select  = document.getElementById('opcion');"));
+          cliente.println(F("select.addEventListener('change',function(){"));
+
+          cliente.println(F("if(select.value == 'Stop'){"));
+          cliente.println(F("location.href='./?Data=3'"));
+          cliente.println(F("}"));
+
+          cliente.println(F("if(select.value == 'Normal'){"));
+          cliente.println(F("location.href='./?Data=4'"));
+          cliente.println(F("}"));
+
+          cliente.println(F("});"));
+          cliente.println(F("</script>"));
 
           cliente.println(F("</body>"));
           cliente.println(F("</html>"));
@@ -196,6 +238,7 @@ void loop()
     cliente.stop();// Cierra la conexión
   }
 }
+
 
 void estilos(EthernetClient cliente, String c_Ande, String c_Generador) {
   cliente.println(F("body{"));
@@ -265,8 +308,8 @@ void estilos(EthernetClient cliente, String c_Ande, String c_Generador) {
 
   cliente.println(F(".buttons{"));
   cliente.println(F("width: 80%;"));
-  cliente.println(F("height: 20vh;"));
-  cliente.println(F("margin: 20% auto;"));
+  cliente.println(F("height: 10vh;"));
+  cliente.println(F("margin: 10% auto;"));
   cliente.println(F("}"));
 
 
@@ -291,16 +334,25 @@ void estilos(EthernetClient cliente, String c_Ande, String c_Generador) {
   cliente.println(F("text-decoration: none;"));
   cliente.println(F("color: #fff;"));
   cliente.println(F("}"));
+
+  cliente.println(F(".styled-select {"));
+  cliente.println(F("width: 240px;"));
+  cliente.println(F("height: 34px;"));
+  cliente.println(F("overflow: hidden;"));
+  cliente.println(F("background-color: gray;"));
+  cliente.println(F("border: 1px solid #ccc;"));
+  //  cliente.println(F("background-color: #aab4ab;"));
+  cliente.println(F("}"));
 }
 
 void reset() {
-  digitalWrite(9, HIGH);
+  digitalWrite(RESET, HIGH);
   delay(500);
-  digitalWrite(9, LOW);
+  digitalWrite(RESET, LOW);
 }
 
-void start() {
-  digitalWrite(5, HIGH);
-  delay(1500);
-  digitalWrite(5, LOW);
+void start(int duracion) {
+  digitalWrite(START, HIGH);
+  delay(duracion);
+  digitalWrite(START, LOW);
 }

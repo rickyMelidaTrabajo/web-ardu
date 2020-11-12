@@ -15,7 +15,7 @@
 EnergyMonitor energyMonitor;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };   //Direccion Fisica MAC
-IPAddress ip(192, 168, 1, 10);                      // IP Local que usted debe configurar
+IPAddress ip(192, 168, 0, 70);                      // IP Local que usted debe configurar
 
 EthernetServer server(80);                             //Se usa el puerto 80 del servidor
 
@@ -42,6 +42,8 @@ void setup() {
   server.begin();
 
   Serial.begin(9600);
+
+  digitalWrite(START, HIGH);
 
 }
 
@@ -166,7 +168,6 @@ void loop()
 
           cliente.println(F("<div class='container'>"));
           cliente.println(F("<h2>TTA REMOTE</h2>"));
-          cliente.println(F("<img src'./imagen.jpeg' alt='logo'>"));
           cliente.println(F("<div class='senhal'>"));
           cliente.println(F("<div id='ande'></div>"));
           cliente.println(F("<div id='generador'></div>"));
@@ -352,7 +353,7 @@ void reset() {
 }
 
 void start(int duracion) {
-  digitalWrite(START, HIGH);
-  delay(duracion);
   digitalWrite(START, LOW);
+  delay(duracion);
+  digitalWrite(START, HIGH);
 }
